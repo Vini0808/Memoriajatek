@@ -124,6 +124,7 @@ namespace Memoriajatek
 
         private void GenerateList()
         {
+            
             int totalCards = SelectedSize * SelectedSize;
             int halfCards = totalCards / 2;
             if (nowSelectedType == "Numbers")
@@ -153,16 +154,17 @@ namespace Memoriajatek
                 }
             }
             // Shuffle the list
-            Random rng = new Random();
-            int n = cards.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = rng.Next(n + 1);
-                string value = cards[k];
-                cards[k] = cards[n];
-                cards[n] = value;
-            }
+            //Random rng = new Random();
+            //int n = cards.Count;
+            //while (n > 1)
+            //{
+            //    n--;
+            //    int k = rng.Next(n + 1);
+            //    string value = cards[k];
+            //    cards[k] = cards[n];
+            //    cards[n] = value;
+            //}
+            Random.Shared.Shuffle(cards);
         }
     }
 }
