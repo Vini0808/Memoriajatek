@@ -26,17 +26,15 @@ namespace Memoriajatek
         int SelectedSize = 0;
         bool pickedSize = false;
         bool pickedType = false;
-        bool OnlyOneCick = false;
 
 
         public MainWindow()
         {
             InitializeComponent();
-            GenerateList();
             listBoxTableSize.ItemsSource = TableSize;
             listBoxTableType.ItemsSource = TableType;
         }
-
+        
         private void SizePick(object sender, RoutedEventArgs e)
         {
             var lb = sender as ListBox;
@@ -47,12 +45,10 @@ namespace Memoriajatek
             }
 
             string selectedSize = lb.SelectedItem.ToString();
-            Debug.WriteLine($"SizePick: SelectedItem='{selectedSize}' TableSize.Count={TableSize.Count} Items=[{string.Join(",", TableSize)}]");
             nowSelectedSize = selectedSize;
             SelectedSize = int.Parse(selectedSize.Split(' ')[0]);
             pickedSize = true;
         }
-
         private void TypePick(object sender, RoutedEventArgs e)
         {
             var lb = sender as ListBox;
@@ -63,13 +59,16 @@ namespace Memoriajatek
             }
 
             string selectedType = lb.SelectedItem.ToString();
-            Debug.WriteLine($"TypePick: SelectedItem='{selectedType}' TableType.Count={TableType.Count} Items=[{string.Join(",", TableType)}]");
             nowSelectedType = selectedType;
             pickedType = true;
         }
 
         private void PlacingTheCards()
         {
+            ButtonGrid.Children.Clear();
+            ButtonGrid.RowDefinitions.Clear();
+            ButtonGrid.ColumnDefinitions.Clear();
+            this.cards = new List<string>();
             string[,] cards = null;
             for (int i = 0; i < SelectedSize; i++)
             {
@@ -111,14 +110,18 @@ namespace Memoriajatek
             Button clickedButton = sender as Button;
             int index = ButtonGrid.Children.IndexOf(clickedButton);
             clickedButton.Content = cards[index];
+
+            int firstClickedButton = 0;
+            int secondClickedButton = 0;
+
         }
 
         private void ButtonClick_TableDraw(object sender, RoutedEventArgs e)
         {
-            if (pickedSize && pickedType && OnlyOneCick == false)
+            if (pickedSize && pickedType)
             {
-                OnlyOneCick = true;
                 PlacingTheCards();
+                GenerateList();
             }
         }
 
@@ -145,7 +148,7 @@ namespace Memoriajatek
             }
             else if (nowSelectedType == "Emojis")
             {
-                string[] emojis = { "😀", "😂", "😍", "😎", "🤔", "😢", "😡", "🎉" };
+                string[] emojis = { "😀", "😂", "😍", "😎", "🤔", "😢", "😡", "🎉" , "🥳", "🤯", "🥶", "😱", "😴", "🤓" , "😕", "🙃", "🙄", "😭" };
                 for (int i = 0; i < halfCards; i++)
                 {
                     string emoji = emojis[i % emojis.Length];
@@ -153,18 +156,17 @@ namespace Memoriajatek
                     cards.Add(emoji);
                 }
             }
-            // Shuffle the list
-            //Random rng = new Random();
-            //int n = cards.Count;
-            //while (n > 1)
-            //{
-            //    n--;
-            //    int k = rng.Next(n + 1);
-            //    string value = cards[k];
-            //    cards[k] = cards[n];
-            //    cards[n] = value;
-            //}
-            Random.Shared.Shuffle(cards);
+
+            Random rng = new Random();
+            int n = cards.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                string value = cards[k];
+                cards[k] = cards[n];
+                cards[n] = value;
+            }
         }
     }
 }
