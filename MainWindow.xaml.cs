@@ -7,6 +7,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Threading.Tasks;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
@@ -26,6 +27,9 @@ namespace Memoriajatek
         int SelectedSize = 0;
         bool pickedSize = false;
         bool pickedType = false;
+        int firstClickedIndex = -1;
+        int secondClickedIndex = -1;
+        bool isChecking = false;
 
 
         public MainWindow()
@@ -34,7 +38,7 @@ namespace Memoriajatek
             listBoxTableSize.ItemsSource = TableSize;
             listBoxTableType.ItemsSource = TableType;
         }
-        
+
         private void SizePick(object sender, RoutedEventArgs e)
         {
             var lb = sender as ListBox;
@@ -68,36 +72,27 @@ namespace Memoriajatek
             ButtonGrid.Children.Clear();
             ButtonGrid.RowDefinitions.Clear();
             ButtonGrid.ColumnDefinitions.Clear();
-            this.cards = new List<string>();
-            string[,] cards = null;
+            // create grid rows and columns
             for (int i = 0; i < SelectedSize; i++)
             {
                 ButtonGrid.RowDefinitions.Add(new RowDefinition());
                 ButtonGrid.ColumnDefinitions.Add(new ColumnDefinition());
             }
 
+            // place buttons face-down (empty content). Buttons are created in the same order as the cards list.
             for (int i = 0; i < SelectedSize; i++)
             {
                 for (int j = 0; j < SelectedSize; j++)
                 {
-                    cards = new string[SelectedSize, SelectedSize];
-                }
-            }
-
-            for (int i = 0; i < SelectedSize; i++)
-            {
-                for (int j = 0; j < SelectedSize; j++)
-                {
-                    string label = cards[i, j];
                     Button btn = new Button
                     {
-                        Content = label,
+                        Content = "",
                         FontSize = 20,
                         FontWeight = FontWeights.Bold,
                         Margin = new Thickness(3),
                     };
                     btn.Click += Button_Click;
-                    
+
                     Grid.SetRow(btn, i);
                     Grid.SetColumn(btn, j);
                     ButtonGrid.Children.Add(btn);
@@ -105,15 +100,55 @@ namespace Memoriajatek
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            if (isChecking) return;
+
             Button clickedButton = sender as Button;
             int index = ButtonGrid.Children.IndexOf(clickedButton);
+
+            // if this card is already revealed or disabled, ignore
+            if (clickedButton == null || clickedButton.IsEnabled == false) return;
+            if (clickedButton.Content?.ToString() != "") return;
+
+            // reveal
             clickedButton.Content = cards[index];
 
-            int firstClickedButton = 0;
-            int secondClickedButton = 0;
+            if (firstClickedIndex == -1)
+            {
+                firstClickedIndex = index;
+                return;
+            }
 
+            if (secondClickedIndex == -1)
+            {
+                // prevent clicking the same card twice
+                if (index == firstClickedIndex) return;
+                secondClickedIndex = index;
+            }
+
+            // check match
+            Button firstButton = ButtonGrid.Children[firstClickedIndex] as Button;
+            Button secondButton = ButtonGrid.Children[secondClickedIndex] as Button;
+            if (cards[firstClickedIndex] == cards[secondClickedIndex])
+            {
+                // leave them revealed and disable
+                firstButton.IsEnabled = false;
+                secondButton.IsEnabled = false;
+                firstClickedIndex = -1;
+                secondClickedIndex = -1;
+            }
+            else
+            {
+                // non-matching: show briefly then hide again
+                isChecking = true;
+                await Task.Delay(800);
+                if (firstButton != null) firstButton.Content = "";
+                if (secondButton != null) secondButton.Content = "";
+                isChecking = false;
+                firstClickedIndex = -1;
+                secondClickedIndex = -1;
+            }
         }
 
         private void ButtonClick_TableDraw(object sender, RoutedEventArgs e)
@@ -127,7 +162,7 @@ namespace Memoriajatek
 
         private void GenerateList()
         {
-            
+
             int totalCards = SelectedSize * SelectedSize;
             int halfCards = totalCards / 2;
             if (nowSelectedType == "Numbers")
@@ -148,7 +183,7 @@ namespace Memoriajatek
             }
             else if (nowSelectedType == "Emojis")
             {
-                string[] emojis = { "😀", "😂", "😍", "😎", "🤔", "😢", "😡", "🎉" , "🥳", "🤯", "🥶", "😱", "😴", "🤓" , "😕", "🙃", "🙄", "😭" };
+                string[] emojis = {"😀", "😂", "😍", "😎", "🤔", "😢", "😡", "🎉", "🥳", "🤯", "🥶", "😱", "😴", "🤓", "😕", "🙃", "🙄", "😭"};
                 for (int i = 0; i < halfCards; i++)
                 {
                     string emoji = emojis[i % emojis.Length];
