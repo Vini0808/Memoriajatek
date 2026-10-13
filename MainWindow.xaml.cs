@@ -30,13 +30,25 @@ namespace Memoriajatek
         int firstClickedIndex = -1;
         int secondClickedIndex = -1;
         bool isChecking = false;
-
+        bool Notdrawn = true;
 
         public MainWindow()
         {
             InitializeComponent();
             listBoxTableSize.ItemsSource = TableSize;
             listBoxTableType.ItemsSource = TableType;
+        }
+        //ideas for later
+        //Replay and exit button at the end of the game
+        //some button for resetting the game mid game
+        private void ButtonClick_TableDraw(object sender, RoutedEventArgs e)
+        {
+            if (pickedSize && pickedType && Notdrawn)
+            {
+                Notdrawn = false;
+                PlacingTheCards();
+                GenerateList();
+            }
         }
 
         private void SizePick(object sender, RoutedEventArgs e)
@@ -53,6 +65,7 @@ namespace Memoriajatek
             SelectedSize = int.Parse(selectedSize.Split(' ')[0]);
             pickedSize = true;
         }
+
         private void TypePick(object sender, RoutedEventArgs e)
         {
             var lb = sender as ListBox;
@@ -122,12 +135,12 @@ namespace Memoriajatek
 
             if (secondClickedIndex == -1)
             {
-                // prevent clicking the same card twice
+                // no clicking the same card twice
                 if (index == firstClickedIndex) return;
                 secondClickedIndex = index;
             }
 
-            // check match
+            // check
             Button firstButton = ButtonGrid.Children[firstClickedIndex] as Button;
             Button secondButton = ButtonGrid.Children[secondClickedIndex] as Button;
             if (cards[firstClickedIndex] == cards[secondClickedIndex])
@@ -140,9 +153,9 @@ namespace Memoriajatek
             }
             else
             {
-                // non-matching: show briefly then hide again
+                // non-matching
                 isChecking = true;
-                await Task.Delay(800);
+                await Task.Delay(800); //this is why we need async
                 if (firstButton != null) firstButton.Content = "";
                 if (secondButton != null) secondButton.Content = "";
                 isChecking = false;
@@ -151,17 +164,12 @@ namespace Memoriajatek
             }
         }
 
-        private void ButtonClick_TableDraw(object sender, RoutedEventArgs e)
-        {
-            if (pickedSize && pickedType)
-            {
-                PlacingTheCards();
-                GenerateList();
-            }
-        }
-
         private void GenerateList()
         {
+            cards.Clear();
+            firstClickedIndex = -1;
+            secondClickedIndex = -1;
+            isChecking = false;
 
             int totalCards = SelectedSize * SelectedSize;
             int halfCards = totalCards / 2;
@@ -175,8 +183,9 @@ namespace Memoriajatek
             }
             else if (nowSelectedType == "Letters")
             {
-                for (char c = 'A'; c < 'A' + halfCards; c++)
+                for (int i = 0; i < halfCards; i++)
                 {
+                    char c = (char)('A' + i);
                     cards.Add(c.ToString());
                     cards.Add(c.ToString());
                 }
